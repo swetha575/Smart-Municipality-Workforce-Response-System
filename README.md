@@ -186,6 +186,19 @@ This project is licensed under the MIT License.
 
 ---
 
-## ⭐ Acknowledgements
+## ⭐ Acknowledgement
 
 This project was developed to demonstrate smart governance solutions and efficient municipal workforce management using modern web technologies and machine learning integration.
+
+
+
+
+## Installation
+
+git clone https://github.com/swetha575/Smart-Municipality-Workforce-Response-System.git
+
+cd Smart-Municipality-Workforce-Response-System
+
+pip install -r requirements.txt
+
+python run.py
