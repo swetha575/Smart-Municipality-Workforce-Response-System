@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User | Smart Municipal{% endblock %}
+{% block page_title %}Edit User{% endblock %}
+{% block page_subtitle %}Update account details, hierarchy placement, password, and face enrollment state.{% endblock %}
+
+{% block content %}
+<div class="row g-4 pt-3">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="h5 mb-1">{{ user.name }}</h3>
+                <p class="text-muted mb-0">Modify role, reporting line, password, or saved face profile.</p>
+            </div>
+            <div class="card-body px-4">
+                <form method="post" novalidate class="manager-routing-form">
+                    {{ form.hidden_tag() }}
+                    <script id="manager-catalog" type="application/json">{{ manager_catalog|tojson }}</script>
+                    <div class="mb-3">{{ form.name.label(class="form-label") }}{{ form.name(class="form-control") }}{% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="mb-3">{{ form.email.label(class="form-label") }}{{ form.email(class="form-control") }}{% for error in form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="mb-3">{{ form.role.label(class="form-label") }}{{ form.role(class="form-select") }}{% for error in form.role.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="mb-3">
+                        {{ form.managed_by.label(class="form-label") }}
+                        {{ form.managed_by(class="form-select") }}
+                        {% for error in form.managed_by.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">{{ form.password.label(class="form-label") }}{{ form.password(class="form-control", placeholder="Leave blank to keep current password") }}{% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="mb-3">{{ form.confirm_password.label(class="form-label") }}{{ form.confirm_password(class="form-control") }}{% for error in form.confirm_password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="form-check mb-4">
+                        {{ form.clear_face_profile(class="form-check-input") }}
+                        {{ form.clear_face_profile.label(class="form-check-label") }}
+                    </div>
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a class="btn btn-outline-secondary" href="{{ url_for('auth.manage_users') }}">Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="h5 mb-1">Account Snapshot</h3>
+            </div>
+            <div class="card-body px-4">
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="list-card h-100"><div class="fw-semibold mb-1">Role</div><div class="text-capitalize">{{ user.role }}</div></div></div>
+                    <div class="col-md-6"><div class="list-card h-100"><div class="fw-semibold mb-1">Reports To</div><div>{% if user.manager %}{{ user.manager.name }}{% else %}System / none{% endif %}</div></div></div>
+                    <div class="col-md-6"><div class="list-card h-100"><div class="fw-semibold mb-1">Face Profile</div><div>{% if user.face_embedding %}Saved{% else %}Not saved{% endif %}</div></div></div>
+                    <div class="col-md-6"><div class="list-card h-100"><div class="fw-semibold mb-1">Created</div><div>{{ user.created_at.strftime('%d %b %Y') }}</div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/manager-routing.js') }}"></script>
+{% endblock %}

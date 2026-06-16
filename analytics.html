@@ -1,0 +1,37 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Analytics | Smart Municipal{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block page_subtitle %}High-level breakdown of users, work queues, complaints, and food coordination.{% endblock %}
+
+{% block content %}
+<div class="row g-4 pt-3">
+    <div class="col-lg-3 col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h3 class="h6 mb-3">User Distribution</h3>{% for key, value in user_breakdown.items() %}<div class="d-flex justify-content-between py-2 border-bottom"><span class="text-capitalize">{{ key }}</span><span class="fw-semibold">{{ value }}</span></div>{% endfor %}</div></div></div>
+    <div class="col-lg-3 col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h3 class="h6 mb-3">Task Status</h3>{% for key, value in task_breakdown.items() %}<div class="d-flex justify-content-between py-2 border-bottom"><span>{{ key }}</span><span class="fw-semibold">{{ value }}</span></div>{% endfor %}</div></div></div>
+    <div class="col-lg-3 col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h3 class="h6 mb-3">Complaint Status</h3>{% for key, value in complaint_breakdown.items() %}<div class="d-flex justify-content-between py-2 border-bottom"><span>{{ key }}</span><span class="fw-semibold">{{ value }}</span></div>{% endfor %}</div></div></div>
+    <div class="col-lg-3 col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h3 class="h6 mb-3">Food Coordination</h3>{% for key, value in food_breakdown.items() %}<div class="d-flex justify-content-between py-2 border-bottom"><span>{{ key }}</span><span class="fw-semibold">{{ value }}</span></div>{% endfor %}</div></div></div>
+</div>
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body p-4">
+        <h3 class="h6 mb-2">Attendance Onboarding Risk</h3>
+        <p class="mb-0 text-muted">Workers without face enrollment: <span class="fw-semibold text-dark">{{ worker_without_face }}</span></p>
+    </div>
+</div>
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white border-0 pt-4 px-4"><h3 class="h5 mb-1">Recent Attendance Activity</h3></div>
+    <div class="card-body px-4">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Name</th><th>Location</th><th>Time</th></tr></thead>
+                <tbody>
+                    {% for record in recent_attendance %}
+                    <tr><td>{{ record.user.name }}</td><td>{{ record.location }}</td><td>{{ record.timestamp.strftime('%d %b %Y, %I:%M %p') }}</td></tr>
+                    {% else %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">No recent attendance activity.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

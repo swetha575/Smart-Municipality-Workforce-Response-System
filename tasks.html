@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks | Smart Municipal{% endblock %}
+{% block page_title %}Task Management{% endblock %}
+{% block page_subtitle %}Supervisor-to-worker execution chain with evidence-based task completion.{% endblock %}
+
+{% block content %}
+<div class="row g-4 pt-3">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="h5 mb-1">Create Task</h3>
+                <p class="text-muted mb-0">{% if current_user.role == 'admin' %}Admin assigns to supervisors{% elif current_user.role == 'supervisor' %}Supervisor assigns to workers{% else %}Workers execute assigned tasks{% endif %}</p>
+            </div>
+            <div class="card-body px-4">
+                {% if can_create %}
+                <form method="post" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">{{ form.title.label(class="form-label") }}{{ form.title(class="form-control") }}{% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="mb-3">{{ form.description.label(class="form-label") }}{{ form.description(class="form-control", rows="4") }}{% for error in form.description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="mb-3">{{ form.location.label(class="form-label") }}{{ form.location(class="form-control") }}{% for error in form.location.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ assignment_target_label }}</label>
+                        {{ form.assigned_to(class="form-select") }}
+                    </div>
+                    <div class="mb-3">{{ form.deadline.label(class="form-label") }}{{ form.deadline(class="form-control") }}{% for error in form.deadline.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}</div>
+                    <div class="d-grid">{{ form.submit(class="btn btn-primary") }}</div>
+                </form>
+                {% else %}
+                <div class="empty-state">This account cannot create tasks or does not currently have eligible assignees in its hierarchy.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4"><h3 class="h5 mb-1">Task Queue</h3></div>
+            <div class="card-body px-4">
+                {% for task in tasks %}
+                <div class="list-card mb-3">
+                    <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+                        <div>
+                            <div class="fw-semibold">{{ task.title }}</div>
+                            <div class="small text-muted">{{ task.location }}</div>
+                            <div class="small text-muted">Assigned to: {{ task.assignee.name }} | Created by: {{ task.creator.name }}</div>
+                            {% if task.complaint %}
+                            <div class="small text-muted">Linked complaint #{{ task.complaint.id }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            <div><span class="badge text-bg-light">{{ task.status }}</span></div>
+                            <div class="small text-muted mt-1">Deadline: {{ task.deadline.strftime('%d %b %Y') }}</div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-3">{{ task.description }}</p>
+                    <div class="small text-muted mb-2">
+                        Before image:
+                        {% if task.before_image %}<a href="{{ url_for('static', filename=task.before_image) }}" target="_blank">View</a>{% else %}Not uploaded{% endif %}
+                        |
+                        After image:
+                        {% if task.after_image %}<a href="{{ url_for('static', filename=task.after_image) }}" target="_blank">View</a>{% else %}Not uploaded{% endif %}
+                    </div>
+                    {% if current_user.role == 'admin' %}
+                    <form method="post" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" class="mb-3" onsubmit="return confirm('Delete this task? Linked complaint status will be reset.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete Task</button>
+                    </form>
+                    {% endif %}
+                    {% if current_user.id == task.assigned_to_id or current_user.role == 'admin' or current_user.id == task.created_by_id %}
+                    <form method="post" action="{{ url_for('tasks.update_status', task_id=task.id) }}" enctype="multipart/form-data" class="row g-3 align-items-end mt-1">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                {% if current_user.id == task.assigned_to_id %}
+                                <option value="In Progress" {% if task.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                {% else %}
+                                <option value="Reviewed" {% if task.status == 'Reviewed' %}selected{% endif %}>Reviewed</option>
+                                <option value="Escalated" {% if task.status == 'Escalated' %}selected{% endif %}>Escalated</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        {% if current_user.role == 'worker' and current_user.id == task.assigned_to_id %}
+                        <div class="col-md-3">
+                            <label class="form-label">Before image</label>
+                            <input type="file" name="before_image" class="form-control" accept=".jpg,.jpeg,.png">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">After image</label>
+                            <input type="file" name="after_image" class="form-control" accept=".jpg,.jpeg,.png">
+                        </div>
+                        {% endif %}
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" type="submit">Update Task</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="empty-state">No tasks available in your current scope.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

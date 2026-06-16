@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance | Smart Municipal{% endblock %}
+{% block page_title %}Attendance{% endblock %}
+{% block page_subtitle %}Worker biometric attendance with supervisor and admin visibility.{% endblock %}
+
+{% block content %}
+{% if current_user.role == 'worker' %}
+<div class="row g-4 pt-3">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="h5 mb-1">Face Enrollment</h3>
+                <p class="text-muted mb-0">Capture a live face profile from the webcam or use an image fallback.</p>
+            </div>
+            <div class="card-body px-4">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {{ registration_form.hidden_tag() }}
+                    <div class="webcam-capture mb-3" data-hidden-input-id="{{ registration_form.captured_image.id }}" data-file-input-id="{{ registration_form.image.id }}">
+                        <div class="camera-frame mb-3">
+                            <video class="webcam-video d-none" autoplay playsinline muted></video>
+                            <canvas class="webcam-canvas d-none"></canvas>
+                            <img class="webcam-preview d-none" alt="Captured webcam preview">
+                            <div class="camera-placeholder">Live webcam capture will appear here.</div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button class="btn btn-outline-primary webcam-start" type="button">Start Camera</button>
+                            <button class="btn btn-outline-secondary webcam-capture-btn d-none" type="button">Capture</button>
+                            <button class="btn btn-outline-secondary webcam-retake d-none" type="button">Retake</button>
+                        </div>
+                        <div class="camera-status small text-muted mb-3">No live capture yet. You can also upload a fallback image.</div>
+                    </div>
+                    <div class="mb-3">
+                        {{ registration_form.image.label(class="form-label") }}
+                        {{ registration_form.image(class="form-control") }}
+                        {% for error in registration_form.image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="d-grid">{{ registration_form.submit(class="btn btn-outline-primary") }}</div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="h5 mb-1">Mark Attendance</h3>
+                <p class="text-muted mb-0">Capture a live image from the webcam and confirm current location.</p>
+            </div>
+            <div class="card-body px-4">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {{ attendance_form.hidden_tag() }}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ attendance_form.location.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ attendance_form.location(class="form-control", placeholder="Ward office, GPS coordinates, or sector") }}
+                                <button class="btn btn-outline-secondary geo-fill" type="button" data-target-id="{{ attendance_form.location.id }}">Use Current Location</button>
+                            </div>
+                            {% for error in attendance_form.location.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ attendance_form.image.label(class="form-label") }}
+                            {{ attendance_form.image(class="form-control") }}
+                            {% for error in attendance_form.image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="webcam-capture mt-4" data-hidden-input-id="{{ attendance_form.captured_image.id }}" data-file-input-id="{{ attendance_form.image.id }}">
+                        <div class="camera-frame mb-3">
+                            <video class="webcam-video d-none" autoplay playsinline muted></video>
+                            <canvas class="webcam-canvas d-none"></canvas>
+                            <img class="webcam-preview d-none" alt="Captured webcam preview">
+                            <div class="camera-placeholder">Use the webcam for live attendance verification.</div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button class="btn btn-outline-primary webcam-start" type="button">Start Camera</button>
+                            <button class="btn btn-outline-secondary webcam-capture-btn d-none" type="button">Capture</button>
+                            <button class="btn btn-outline-secondary webcam-retake d-none" type="button">Retake</button>
+                        </div>
+                        <div class="camera-status small text-muted">No live capture yet. Upload fallback image only if webcam access is unavailable.</div>
+                    </div>
+                    <div class="d-grid mt-4">{{ attendance_form.submit(class="btn btn-primary") }}</div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row g-4 pt-3">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="h5 mb-1">Override Attendance</h3>
+                <p class="text-muted mb-0">Use only when worker biometric attendance cannot be completed.</p>
+            </div>
+            <div class="card-body px-4">
+                {% if visible_workers %}
+                <form method="post" novalidate>
+                    {{ override_form.hidden_tag() }}
+                    <div class="mb-3">{{ override_form.worker_id.label(class="form-label") }}{{ override_form.worker_id(class="form-select") }}</div>
+                    <div class="mb-3">{{ override_form.location.label(class="form-label") }}{{ override_form.location(class="form-control", placeholder="Override location / office note") }}</div>
+                    <div class="d-grid">{{ override_form.submit(class="btn btn-primary") }}</div>
+                </form>
+                {% else %}
+                <div class="empty-state">No workers are currently linked to your supervision scope.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="h5 mb-1">Attendance Monitoring</h3>
+                <p class="text-muted mb-0">Review worker attendance records visible to your role.</p>
+            </div>
+            <div class="card-body px-4">
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="list-card h-100"><div class="fw-semibold mb-1">Workers Visible</div><div class="display-6 mb-0">{{ visible_workers|length }}</div></div></div>
+                    <div class="col-md-4"><div class="list-card h-100"><div class="fw-semibold mb-1">Records Loaded</div><div class="display-6 mb-0">{{ records|length }}</div></div></div>
+                    <div class="col-md-4"><div class="list-card h-100"><div class="fw-semibold mb-1">Override Access</div><div class="small text-muted mt-2">Available for operational exceptions only.</div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h3 class="h5 mb-1">{% if current_user.role == 'worker' %}My Attendance History{% else %}Visible Attendance Records{% endif %}</h3>
+    </div>
+    <div class="card-body px-4">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Worker</th>
+                        <th>Timestamp</th>
+                        <th>Location</th>
+                        <th>Capture Mode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.user.name }}</td>
+                        <td>{{ record.timestamp.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        <td>{{ record.location }}</td>
+                        <td>{% if record.is_override %}Override by {{ record.marked_by.name if record.marked_by else 'System' }}{% else %}Face verified{% endif %}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center text-muted py-4">No attendance records available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/webcam-capture.js') }}"></script>
+{% endblock %}
